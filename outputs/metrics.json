@@ -1,0 +1,9 @@
+{
+  "n_train": 3456,
+  "n_test": 864,
+  "n_diseases": 36,
+  "n_symptoms": 65,
+  "n_features_total": 79,
+  "top1_accuracy": 0.7199,
+  "top3_accuracy": 0.9074
+}

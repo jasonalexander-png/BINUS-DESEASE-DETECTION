@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BINUS Disease Detection — Skrining Gejala Awal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F2F7F6; --surface: #FFFFFF; --border: #DCEAE8;
+  --teal: #0E7C7B; --teal-dark: #0A5C5B; --ink: #10302E; --muted: #5B7B79;
+  --urgent: #C1432E; --urgent-bg: #FDECEA;
+  --sans: 'Lexend', system-ui, -apple-system, sans-serif;
+  --serif: 'Source Serif 4', Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.app { max-width: 760px; margin: 0 auto; padding: 28px 20px 60px; display: flex; flex-direction: column; gap: 18px; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-mark { width: 44px; height: 44px; border-radius: 12px; background: var(--teal); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; flex-shrink: 0; }
+.brand h1 { font-family: var(--serif); font-size: 22px; font-weight: 600; margin: 0; color: var(--teal-dark); }
+.tagline { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.disclaimer { display: flex; gap: 10px; background: #FFF8EC; border: 1px solid #F0DDB0; border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: #6B4E1E; line-height: 1.5; }
+.disclaimer p { margin: 0; }
+.disclaimer-icon { flex-shrink: 0; font-weight: 700; }
+.intake-head h2 { font-family: var(--serif); font-size: 20px; margin: 4px 0 2px; }
+.intake-head p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.symptom-group, .optional-block { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 16px 14px; }
+.symptom-group h3, .optional-block h3 { font-size: 13.5px; font-weight: 600; color: var(--teal-dark); margin: 0 0 10px; }
+.chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 100px; padding: 8px 14px; font-size: 13px; transition: background .15s, border-color .15s, color .15s; }
+.chip:hover { border-color: var(--teal); }
+.chip.active { background: var(--teal); border-color: var(--teal); color: #fff; font-weight: 500; }
+.chip-skip { border-style: dashed; color: var(--muted); }
+.chip-skip.active { background: var(--muted); border-color: var(--muted); color: #fff; }
+.bmi-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.bmi-field { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--muted); flex: 1; min-width: 140px; }
+.bmi-field input { border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 14px; font-family: inherit; color: var(--ink); background: var(--bg); }
+.bmi-field input:disabled { opacity: .5; }
+.submit-bar { position: sticky; bottom: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 10px 10px 10px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px rgba(14,124,123,.15); font-size: 13px; color: var(--muted); }
+.submit-btn { background: var(--teal); color: #fff; border: none; border-radius: 100px; padding: 12px 22px; font-size: 14px; font-weight: 600; }
+.submit-btn:disabled { background: #B7CCC9; cursor: not-allowed; }
+.loading-view { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 70px 20px; color: var(--muted); font-size: 14px; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin .9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.results-view h2 { font-family: var(--serif); font-size: 20px; margin: 4px 0 2px; }
+.results-sub { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; }
+.urgent-banner { background: var(--urgent-bg); border: 1px solid #F3C6BE; color: var(--urgent); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; margin-bottom: 16px; line-height: 1.5; }
+.results-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+.result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.result-card.urgent { border-color: #F3C6BE; }
+.result-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.rank-badge { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; color: var(--teal-dark); flex-shrink: 0; }
+.result-title { flex: 1; }
+.result-title h3 { margin: 0; font-size: 15.5px; }
+.category-tag { font-size: 11px; color: var(--muted); }
+.prob-value { font-weight: 700; color: var(--teal-dark); font-size: 15px; }
+.prob-track { height: 6px; background: var(--bg); border-radius: 100px; overflow: hidden; margin-bottom: 10px; }
+.prob-fill { height: 100%; background: var(--teal); border-radius: 100px; }
+.result-desc { font-size: 13px; color: var(--ink); line-height: 1.5; margin: 0 0 10px; }
+.specialist-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.specialist-label { font-size: 12px; color: var(--muted); }
+.specialist-badge { background: #E6F3F2; color: var(--teal-dark); font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 100px; }
+.reset-btn { background: var(--surface); border: 1px solid var(--border); color: var(--teal-dark); border-radius: 100px; padding: 11px 20px; font-size: 13.5px; font-weight: 500; }
+.footer { text-align: center; font-size: 11.5px; color: var(--muted); padding-top: 10px; }
+.hidden { display: none !important; }
+.method-note { font-size: 11.5px; color: var(--muted); background: var(--bg); border: 1px dashed var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <span class="brand-mark">+</span>
+      <div>
+        <h1>BINUS Disease Detection</h1>
+        <p class="tagline">Skrining awal gejala &amp; arahan dokter spesialis</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="disclaimer">
+    <span class="disclaimer-icon">ⓘ</span>
+    <p><strong>Ini bukan diagnosis medis.</strong> BINUS Disease Detection adalah alat skrining awal untuk keperluan edukasi/portofolio. Hasilnya adalah kemungkinan berdasarkan pola gejala umum — selalu konsultasikan kondisi kamu ke dokter untuk diagnosis dan penanganan yang sesungguhnya.</p>
+  </div>
+
+  <main id="main-content">
+    <section id="intake-view">
+      <div class="intake-head">
+        <h2>Sedikit data tambahan (boleh dilewati)</h2>
+        <p>Membantu hasil lebih relevan — kamu bebas pilih "Tidak tahu" atau "Tidak mau jawab" kapan saja.</p>
+      </div>
+
+      <div class="optional-block">
+        <h3>Berat &amp; tinggi badan (opsional, untuk hitung BMI)</h3>
+        <div class="bmi-row">
+          <label class="bmi-field"><span>Berat badan (kg)</span><input type="number" id="bb-input" min="1" max="400" placeholder="mis. 60"></label>
+          <label class="bmi-field"><span>Tinggi badan (cm)</span><input type="number" id="tb-input" min="50" max="250" placeholder="mis. 165"></label>
+        </div>
+        <div class="chip-grid" style="margin-top:10px">
+          <button type="button" class="chip chip-skip" id="bb-skip-btn">Tidak tahu / tidak mau menjawab</button>
+        </div>
+      </div>
+
+      <div class="optional-block">
+        <h3>Tekanan darah (tensi), kalau tahu</h3>
+        <div class="chip-grid" id="tensi-options"></div>
+      </div>
+
+      <div class="optional-block">
+        <h3>Sudah berapa lama merasakan gejala ini?</h3>
+        <div class="chip-grid" id="duration-options"></div>
+      </div>
+
+      <div class="intake-head" style="margin-top:8px">
+        <h2>Pilih gejala yang kamu rasakan</h2>
+        <p id="symptom-count-label"></p>
+      </div>
+      <div id="symptom-groups"></div>
+    </section>
+
+    <section id="loading-view" class="loading-view hidden">
+      <div class="spinner"></div>
+      <p id="loading-msg">Membaca gejala yang kamu pilih…</p>
+    </section>
+
+    <section id="results-view" class="results-view hidden"></section>
+  </main>
+
+  <div id="submit-bar" class="submit-bar">
+    <span id="selected-count-label">0 gejala dipilih</span>
+    <button id="submit-btn" class="submit-btn" disabled>Lihat kemungkinan</button>
+  </div>
+
+  <footer class="footer">Dibuat untuk keperluan portofolio &amp; edukasi — bukan produk medis resmi. (Versi standalone: skoring rule-based di JavaScript, bukan model ML terlatih.)</footer>
+</div>
+
+<script>
+// ============================================================
+// BASIS PENGETAHUAN (porting dari knowledge_base.py)
+// ============================================================
+const SYMPTOM_GROUPS = {
+  "Umum": { demam:"Demam (badan hangat/meriang)", demam_tinggi_mendadak:"Demam tinggi yang muncul mendadak", menggigil:"Menggigil", lemas:"Badan lemas", kelelahan:"Kelelahan berkepanjangan", keringat_malam:"Berkeringat berlebihan di malam hari", penurunan_berat_badan:"Penurunan berat badan tanpa sebab jelas", nafsu_makan_menurun:"Nafsu makan menurun" },
+  "Pernapasan & THT": { batuk_kering:"Batuk kering", batuk_berdahak:"Batuk berdahak", pilek:"Pilek / hidung berair", hidung_tersumbat:"Hidung tersumbat", bersin_bersin:"Sering bersin", sakit_tenggorokan:"Sakit tenggorokan", suara_serak:"Suara serak", sulit_menelan:"Sulit/nyeri saat menelan", sesak_napas:"Sesak napas", mengi:"Napas berbunyi 'ngik' (mengi)", nyeri_dada:"Nyeri dada", telinga_nyeri:"Nyeri telinga", telinga_berdenging:"Telinga berdenging", pendengaran_menurun:"Pendengaran menurun", kelenjar_getah_bening_bengkak:"Kelenjar getah bening bengkak (leher)" },
+  "Kepala & Saraf": { sakit_kepala:"Sakit kepala", sakit_kepala_sebelah:"Sakit kepala sebelah / berdenyut", nyeri_belakang_mata:"Nyeri di belakang mata", pusing_berputar:"Pusing berputar (vertigo)", sulit_konsentrasi:"Sulit berkonsentrasi", sensitif_cahaya:"Sensitif terhadap cahaya" },
+  "Pencernaan": { mual:"Mual", muntah:"Muntah", diare:"Diare", sembelit:"Sembelit", nyeri_perut:"Nyeri perut (umum)", nyeri_perut_kanan_bawah:"Nyeri perut kanan bawah", nyeri_ulu_hati:"Nyeri ulu hati", kembung:"Perut kembung", sering_bersendawa:"Sering bersendawa", mata_kuning:"Mata/kulit menguning", urin_gelap:"Urin berwarna gelap" },
+  "Kulit & Mata": { ruam_kulit:"Ruam kulit", gatal_gatal:"Gatal-gatal", kulit_kering:"Kulit kering", lepuhan_kulit_sebelah_tubuh:"Lepuhan kulit di satu sisi tubuh", nyeri_saraf_kulit:"Nyeri seperti terbakar di kulit", mata_merah:"Mata merah", mata_gatal:"Mata gatal", mata_berair:"Mata berair" },
+  "Otot, Sendi & Kemih": { nyeri_sendi:"Nyeri sendi", bengkak_sendi:"Sendi bengkak", kaku_sendi_pagi:"Sendi kaku di pagi hari", nyeri_otot:"Nyeri otot", nyeri_pinggang:"Nyeri pinggang", sering_buang_air_kecil:"Sering buang air kecil", nyeri_saat_kencing:"Nyeri saat buang air kecil", urin_keruh:"Urin keruh" },
+  "Jantung & Hormon": { jantung_berdebar:"Jantung berdebar", bengkak_kaki:"Bengkak pada kaki", tangan_gemetar:"Tangan gemetar", intoleransi_panas:"Tidak tahan cuaca panas", intoleransi_dingin:"Tidak tahan cuaca dingin" },
+  "Kondisi Psikologis": { cemas_berlebihan:"Cemas berlebihan", sulit_tidur:"Sulit tidur", mudah_tersinggung:"Mudah tersinggung/marah", mood_turun_berkepanjangan:"Suasana hati menurun berkepanjangan" },
+};
+
+const RED_FLAG_SYMPTOMS = new Set(["nyeri_dada", "sesak_napas", "nyeri_perut_kanan_bawah", "demam_tinggi_mendadak"]);
+
+const TENSI_OPTIONS = [
+  { value: "normal", label: "Normal (≈120/80 atau lebih rendah)" },
+  { value: "agak_tinggi", label: "Agak tinggi (120–139/80–89)" },
+  { value: "tinggi", label: "Tinggi (140/90 ke atas)" },
+];
+const DURATION_OPTIONS = [
+  { value: "kurang_3_hari", label: "Kurang dari 3 hari" },
+  { value: "3_7_hari", label: "3–7 hari" },
+  { value: "1_4_minggu", label: "1–4 minggu" },
+  { value: "lebih_1_bulan", label: "Lebih dari 1 bulan" },
+];
+
+const DURATION_ARCHETYPES = {
+  akut:       { kurang_3_hari:.45, "3_7_hari":.35, "1_4_minggu":.15, lebih_1_bulan:.05 },
+  subakut:    { kurang_3_hari:.15, "3_7_hari":.30, "1_4_minggu":.35, lebih_1_bulan:.20 },
+  kronis:     { kurang_3_hari:.05, "3_7_hari":.10, "1_4_minggu":.25, lebih_1_bulan:.60 },
+  bervariasi: { kurang_3_hari:.25, "3_7_hari":.25, "1_4_minggu":.25, lebih_1_bulan:.25 },
+};
+const BMI_BIAS_HIGH = { kurus:.05, normal:.25, gemuk:.40, obesitas:.30 };
+const BMI_BIAS_NEUTRAL = { kurus:.15, normal:.55, gemuk:.20, obesitas:.10 };
+const TENSI_BIAS_HIGH = { normal:.15, agak_tinggi:.30, tinggi:.55 };
+const TENSI_BIAS_NEUTRAL = { normal:.55, agak_tinggi:.30, tinggi:.15 };
+
+// symptoms, specialist, category, description, urgent, duration_typical, bmi_bias, tensi_bias
+const DISEASES = {
+  "Influenza (Flu)": { symptoms:{demam:.85,menggigil:.6,lemas:.8,nyeri_otot:.7,sakit_kepala:.6,batuk_kering:.6,sakit_tenggorokan:.5,pilek:.4}, specialist:"Dokter Umum", category:"Infeksi virus umum", urgent:false, description:"Infeksi virus saluran napas yang menyerang seluruh tubuh, biasanya membaik sendiri dalam beberapa hari.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Selesma (Common Cold)": { symptoms:{pilek:.9,hidung_tersumbat:.8,bersin_bersin:.7,sakit_tenggorokan:.5,batuk_kering:.4,demam:.2}, specialist:"Dokter Umum", category:"Infeksi virus umum", urgent:false, description:"Infeksi virus ringan pada hidung dan tenggorokan bagian atas.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Migrain": { symptoms:{sakit_kepala_sebelah:.9,nyeri_belakang_mata:.5,mual:.6,sensitif_cahaya:.7,muntah:.3}, specialist:"Neurologis (Dokter Saraf)", category:"Gangguan saraf", urgent:false, description:"Sakit kepala berdenyut yang sering di satu sisi, umumnya disertai mual dan sensitif cahaya.", duration_typical:"bervariasi", bmi_bias:null, tensi_bias:null },
+  "Sakit Kepala Tegang (Tension Headache)": { symptoms:{sakit_kepala:.85,lemas:.3,sulit_konsentrasi:.3}, specialist:"Dokter Umum / Neurologis", category:"Gangguan saraf", urgent:false, description:"Sakit kepala akibat ketegangan otot, terasa seperti tekanan di kedua sisi kepala.", duration_typical:"bervariasi", bmi_bias:null, tensi_bias:null },
+  "Gastritis (Maag)": { symptoms:{nyeri_ulu_hati:.85,mual:.6,kembung:.6,sering_bersendawa:.5,nafsu_makan_menurun:.4}, specialist:"Gastroenterologis (Penyakit Dalam)", category:"Pencernaan", urgent:false, description:"Peradangan pada dinding lambung.", duration_typical:"subakut", bmi_bias:null, tensi_bias:null },
+  "GERD (Asam Lambung Naik)": { symptoms:{nyeri_ulu_hati:.7,sering_bersendawa:.6,sulit_menelan:.3,suara_serak:.3,batuk_kering:.3}, specialist:"Gastroenterologis (Penyakit Dalam)", category:"Pencernaan", urgent:false, description:"Naiknya asam lambung ke kerongkongan yang menyebabkan rasa terbakar.", duration_typical:"kronis", bmi_bias:"tinggi", tensi_bias:null },
+  "Diare Akut": { symptoms:{diare:.95,nyeri_perut:.6,mual:.5,lemas:.4,demam:.3}, specialist:"Dokter Umum / Gastroenterologis", category:"Pencernaan", urgent:false, description:"Buang air besar cair lebih sering dari biasanya, sering akibat infeksi.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Infeksi Saluran Kemih (ISK)": { symptoms:{nyeri_saat_kencing:.85,sering_buang_air_kecil:.8,urin_keruh:.6,nyeri_pinggang:.4,demam:.3}, specialist:"Urologis", category:"Saluran kemih", urgent:false, description:"Infeksi pada saluran kemih, paling umum terjadi pada kandung kemih.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Faringitis": { symptoms:{sakit_tenggorokan:.9,sulit_menelan:.6,demam:.4,kelenjar_getah_bening_bengkak:.4}, specialist:"THT (Telinga Hidung Tenggorokan)", category:"THT", urgent:false, description:"Peradangan pada tenggorokan (faring).", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Sinusitis": { symptoms:{hidung_tersumbat:.8,sakit_kepala:.6,nyeri_belakang_mata:.4,pilek:.5,demam:.3}, specialist:"THT", category:"THT", urgent:false, description:"Peradangan pada rongga sinus di sekitar hidung.", duration_typical:"subakut", bmi_bias:null, tensi_bias:null },
+  "Rhinitis Alergi": { symptoms:{bersin_bersin:.85,hidung_tersumbat:.6,mata_gatal:.6,mata_berair:.5,pilek:.5}, specialist:"THT / Alergi-Imunologi", category:"Alergi", urgent:false, description:"Reaksi alergi pada saluran hidung terhadap pemicu seperti debu atau serbuk sari.", duration_typical:"kronis", bmi_bias:null, tensi_bias:null },
+  "Asma": { symptoms:{sesak_napas:.85,mengi:.8,batuk_kering:.5,nyeri_dada:.3}, specialist:"Pulmonologis (Dokter Paru)", category:"Pernapasan", urgent:false, description:"Penyempitan saluran napas yang menyebabkan sesak dan napas berbunyi.", duration_typical:"bervariasi", bmi_bias:null, tensi_bias:null },
+  "Bronkitis Akut": { symptoms:{batuk_berdahak:.85,lemas:.4,sesak_napas:.4,nyeri_dada:.3,demam:.3}, specialist:"Pulmonologis / Dokter Umum", category:"Pernapasan", urgent:false, description:"Peradangan pada saluran bronkus di paru-paru.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Hipertensi": { symptoms:{sakit_kepala:.5,pusing_berputar:.3,jantung_berdebar:.3,lemas:.2}, specialist:"Kardiologis / Penyakit Dalam", category:"Kardiovaskular", urgent:false, description:"Tekanan darah tinggi yang sering tidak menimbulkan gejala jelas di awal.", duration_typical:"kronis", bmi_bias:"tinggi", tensi_bias:"tinggi" },
+  "Diabetes Melitus Tipe 2": { symptoms:{sering_buang_air_kecil:.6,lemas:.5,penurunan_berat_badan:.4,kulit_kering:.3,nafsu_makan_menurun:.2}, specialist:"Endokrinologis / Penyakit Dalam", category:"Metabolik", urgent:false, description:"Gangguan metabolisme gula darah kronis.", duration_typical:"kronis", bmi_bias:"tinggi", tensi_bias:null },
+  "Anemia Defisiensi Besi": { symptoms:{lemas:.85,kelelahan:.7,pusing_berputar:.4,sesak_napas:.3,jantung_berdebar:.3}, specialist:"Hematologis / Penyakit Dalam", category:"Darah", urgent:false, description:"Kekurangan sel darah merah sehat, sering akibat kurang zat besi.", duration_typical:"kronis", bmi_bias:null, tensi_bias:null },
+  "Vertigo (Gangguan Keseimbangan)": { symptoms:{pusing_berputar:.9,mual:.5,muntah:.3,telinga_berdenging:.3}, specialist:"Neurologis / THT", category:"Gangguan saraf", urgent:false, description:"Sensasi berputar yang sering dikaitkan dengan gangguan keseimbangan telinga dalam.", duration_typical:"bervariasi", bmi_bias:null, tensi_bias:null },
+  "Insomnia": { symptoms:{sulit_tidur:.9,kelelahan:.6,sulit_konsentrasi:.5,mudah_tersinggung:.4}, specialist:"Dokter Umum / Psikiater", category:"Kondisi psikologis", urgent:false, description:"Kesulitan memulai atau mempertahankan tidur secara berkelanjutan.", duration_typical:"kronis", bmi_bias:null, tensi_bias:null },
+  "Dermatitis Atopik": { symptoms:{gatal_gatal:.85,kulit_kering:.7,ruam_kulit:.6}, specialist:"Dermatologis (Dokter Kulit)", category:"Kulit", urgent:false, description:"Peradangan kulit kronis yang menyebabkan rasa gatal dan kulit kering.", duration_typical:"kronis", bmi_bias:null, tensi_bias:null },
+  "Konjungtivitis": { symptoms:{mata_merah:.9,mata_gatal:.6,mata_berair:.6}, specialist:"Oftalmologis (Dokter Mata)", category:"Mata", urgent:false, description:"Peradangan pada selaput bening yang melapisi bagian putih mata.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Otitis Media Akut": { symptoms:{telinga_nyeri:.85,demam:.4,pendengaran_menurun:.4}, specialist:"THT", category:"THT", urgent:false, description:"Infeksi pada telinga tengah, sering terjadi setelah pilek.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Tonsilitis": { symptoms:{sakit_tenggorokan:.85,sulit_menelan:.6,demam:.5,kelenjar_getah_bening_bengkak:.5}, specialist:"THT", category:"THT", urgent:false, description:"Peradangan pada amandel (tonsil).", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Apendisitis Akut (Radang Usus Buntu)": { symptoms:{nyeri_perut_kanan_bawah:.9,mual:.5,muntah:.4,demam:.4,nafsu_makan_menurun:.4}, specialist:"Bedah Umum — SEGERA", category:"Kedaruratan bedah", urgent:true, description:"Peradangan pada usus buntu yang dapat memburuk cepat dan butuh penanganan segera.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Batu Ginjal (Nefrolitiasis)": { symptoms:{nyeri_pinggang:.85,nyeri_saat_kencing:.4,urin_keruh:.3,mual:.4}, specialist:"Urologis", category:"Saluran kemih", urgent:false, description:"Endapan keras mineral yang terbentuk di ginjal atau saluran kemih.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Demam Berdarah Dengue (DBD)": { symptoms:{demam_tinggi_mendadak:.9,sakit_kepala:.5,nyeri_otot:.6,ruam_kulit:.4,mual:.3,lemas:.5}, specialist:"Penyakit Dalam — SEGERA", category:"Infeksi arbovirus", urgent:true, description:"Infeksi virus yang ditularkan nyamuk Aedes aegypti, dapat memburuk cepat.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Demam Tifoid (Tifus)": { symptoms:{demam:.85,sakit_kepala:.5,lemas:.6,nafsu_makan_menurun:.5,nyeri_perut:.4,sembelit:.3}, specialist:"Penyakit Dalam", category:"Infeksi bakteri", urgent:false, description:"Infeksi bakteri Salmonella typhi, umumnya melalui makanan/air yang terkontaminasi.", duration_typical:"subakut", bmi_bias:null, tensi_bias:null },
+  "COVID-19": { symptoms:{demam:.6,batuk_kering:.6,kelelahan:.6,sesak_napas:.3,sakit_tenggorokan:.3,pilek:.3}, specialist:"Dokter Umum / Penyakit Dalam", category:"Infeksi virus", urgent:false, description:"Infeksi virus SARS-CoV-2 yang menyerang saluran pernapasan.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Chikungunya": { symptoms:{demam_tinggi_mendadak:.8,nyeri_sendi:.85,bengkak_sendi:.5,ruam_kulit:.4,sakit_kepala:.4}, specialist:"Penyakit Dalam", category:"Infeksi arbovirus", urgent:false, description:"Infeksi virus dari gigitan nyamuk yang khas menyebabkan nyeri sendi hebat.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+  "Hepatitis A": { symptoms:{mata_kuning:.8,urin_gelap:.7,lemas:.6,nafsu_makan_menurun:.5,mual:.5,demam:.3}, specialist:"Gastroenterologis / Penyakit Dalam", category:"Infeksi hati", urgent:false, description:"Infeksi virus pada hati, umumnya menular lewat makanan/air yang terkontaminasi.", duration_typical:"subakut", bmi_bias:null, tensi_bias:null },
+  "Hipotiroidisme": { symptoms:{kelelahan:.7,intoleransi_dingin:.7,kulit_kering:.5,mudah_tersinggung:.3,sembelit:.3}, specialist:"Endokrinologis", category:"Hormon", urgent:false, description:"Kelenjar tiroid yang kurang aktif sehingga memperlambat metabolisme tubuh.", duration_typical:"kronis", bmi_bias:"tinggi", tensi_bias:null },
+  "Hipertiroidisme": { symptoms:{penurunan_berat_badan:.6,jantung_berdebar:.6,tangan_gemetar:.6,intoleransi_panas:.6,mudah_tersinggung:.4,sulit_tidur:.3}, specialist:"Endokrinologis", category:"Hormon", urgent:false, description:"Kelenjar tiroid yang terlalu aktif sehingga mempercepat metabolisme tubuh.", duration_typical:"kronis", bmi_bias:null, tensi_bias:null },
+  "Sindrom Iritasi Usus (IBS)": { symptoms:{nyeri_perut:.7,kembung:.6,diare:.4,sembelit:.4}, specialist:"Gastroenterologis", category:"Pencernaan", urgent:false, description:"Gangguan fungsi usus kronis tanpa kerusakan struktural yang jelas.", duration_typical:"kronis", bmi_bias:null, tensi_bias:null },
+  "Osteoartritis": { symptoms:{nyeri_sendi:.85,kaku_sendi_pagi:.6,bengkak_sendi:.4,nyeri_otot:.3}, specialist:"Ortopedis / Reumatologis", category:"Muskuloskeletal", urgent:false, description:"Keausan tulang rawan sendi akibat penggunaan jangka panjang, umum pada usia lanjut.", duration_typical:"kronis", bmi_bias:"tinggi", tensi_bias:null },
+  "Herpes Zoster (Cacar Api)": { symptoms:{lepuhan_kulit_sebelah_tubuh:.9,nyeri_saraf_kulit:.8,demam:.3,kelelahan:.3}, specialist:"Dermatologis (Dokter Kulit)", category:"Kulit", urgent:false, description:"Reaktivasi virus cacar air yang menyebabkan ruam lepuh nyeri di satu sisi tubuh.", duration_typical:"subakut", bmi_bias:null, tensi_bias:null },
+  "Gangguan Cemas (Anxiety Disorder)": { symptoms:{cemas_berlebihan:.85,jantung_berdebar:.5,sulit_tidur:.5,sulit_konsentrasi:.4,mudah_tersinggung:.3}, specialist:"Psikiater / Psikolog Klinis", category:"Kondisi psikologis", urgent:false, description:"Kecemasan berlebihan yang menetap dan mengganggu aktivitas sehari-hari.", duration_typical:"kronis", bmi_bias:null, tensi_bias:null },
+  "Malaria": { symptoms:{demam_tinggi_mendadak:.8,menggigil:.8,sakit_kepala:.5,nyeri_otot:.5,keringat_malam:.4,mual:.3}, specialist:"Penyakit Dalam — SEGERA", category:"Infeksi parasit", urgent:true, description:"Infeksi parasit yang ditularkan nyamuk Anopheles, umum di daerah endemis.", duration_typical:"akut", bmi_bias:null, tensi_bias:null },
+};
+
+const DISCLAIMER_TEXT = "Hasil ini BUKAN diagnosis medis. Ini adalah alat skrining awal edukatif berbasis pola gejala umum, dibuat untuk keperluan portofolio. Untuk diagnosis dan penanganan yang akurat, selalu konsultasikan kondisi Anda langsung dengan dokter.";
+
+// ============================================================
+// STATE
+// ============================================================
+const selected = new Set();
+let tensiChoice = null;   // null | 'skip' | kode kategori
+let durationChoice = null;
+let bbTbSkipped = false;
+
+function bmiCategoryFrom(bb, tb) {
+  if (!bb || !tb || tb <= 0) return null;
+  const bmi = bb / ((tb / 100) ** 2);
+  if (bmi < 18.5) return "kurus";
+  if (bmi < 25) return "normal";
+  if (bmi < 30) return "gemuk";
+  return "obesitas";
+}
+
+function buildChoiceButtons(container, options, currentValueGetter, onPick) {
+  container.innerHTML = '';
+  const render = () => {
+    container.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('active', b.dataset.val === (currentValueGetter() || ''));
+    });
+  };
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'chip'; btn.textContent = opt.label; btn.dataset.val = opt.value;
+    btn.addEventListener('click', () => { onPick(opt.value); render(); });
+    container.appendChild(btn);
+  });
+  const skipBtn = document.createElement('button');
+  skipBtn.type = 'button'; skipBtn.className = 'chip chip-skip'; skipBtn.textContent = 'Tidak tahu'; skipBtn.dataset.val = 'skip';
+  skipBtn.addEventListener('click', () => { onPick('skip'); render(); });
+  container.appendChild(skipBtn);
+
+  const refuseBtn = document.createElement('button');
+  refuseBtn.type = 'button'; refuseBtn.className = 'chip chip-skip'; refuseBtn.textContent = 'Tidak mau jawab'; refuseBtn.dataset.val = 'skip-refuse';
+  refuseBtn.addEventListener('click', () => { onPick('skip-refuse'); render(); });
+  container.appendChild(refuseBtn);
+
+  render();
+}
+
+function buildSymptomUI() {
+  const container = document.getElementById('symptom-groups');
+  container.innerHTML = '';
+  Object.entries(SYMPTOM_GROUPS).forEach(([title, symptoms]) => {
+    const group = document.createElement('div');
+    group.className = 'symptom-group';
+    const h3 = document.createElement('h3'); h3.textContent = title; group.appendChild(h3);
+    const grid = document.createElement('div'); grid.className = 'chip-grid';
+    Object.entries(symptoms).forEach(([key, label]) => {
+      const chip = document.createElement('button');
+      chip.type = 'button'; chip.className = 'chip'; chip.textContent = label; chip.dataset.key = key;
+      chip.addEventListener('click', () => toggleSymptom(key, chip));
+      grid.appendChild(chip);
+    });
+    group.appendChild(grid);
+    container.appendChild(group);
+  });
+  const total = Object.values(SYMPTOM_GROUPS).reduce((s, g) => s + Object.keys(g).length, 0);
+  document.getElementById('symptom-count-label').textContent = `${total} gejala tersedia, boleh pilih lebih dari satu.`;
+}
+
+function toggleSymptom(key, chipEl) {
+  if (selected.has(key)) { selected.delete(key); chipEl.classList.remove('active'); }
+  else { selected.add(key); chipEl.classList.add('active'); }
+  document.getElementById('selected-count-label').textContent = `${selected.size} gejala dipilih`;
+  document.getElementById('submit-btn').disabled = selected.size === 0;
+}
+
+function resolveChoice(v) {
+  if (!v || v === 'skip' || v === 'skip-refuse') return null;
+  return v;
+}
+
+// Skoring rule-based: skor gejala (jumlah bobot gejala yang cocok) DITAMBAH
+// bonus dari kecocokan durasi/BMI/tensi terhadap distribusi khas tiap
+// penyakit — mereplikasi logika yang dipelajari model ML versi Python,
+// disederhanakan jadi rumus eksplisit karena versi ini tidak punya model
+// terlatih di baliknya.
+function predict(selectedSymptoms, durationCat, bmiCat, tensiCat) {
+  const scores = Object.entries(DISEASES).map(([name, info]) => {
+    let raw = 0;
+    for (const s of selectedSymptoms) if (info.symptoms[s]) raw += info.symptoms[s];
+
+    if (durationCat) {
+      const dist = DURATION_ARCHETYPES[info.duration_typical];
+      raw += 1.8 * (dist[durationCat] || 0);
+    }
+    if (bmiCat) {
+      const dist = info.bmi_bias === "tinggi" ? BMI_BIAS_HIGH : BMI_BIAS_NEUTRAL;
+      raw += 1.3 * (dist[bmiCat] || 0);
+    }
+    if (tensiCat) {
+      const dist = info.tensi_bias === "tinggi" ? TENSI_BIAS_HIGH : TENSI_BIAS_NEUTRAL;
+      raw += 1.3 * (dist[tensiCat] || 0);
+    }
+    return { name, raw, info };
+  });
+  scores.sort((a, b) => b.raw - a.raw);
+  const top3 = scores.slice(0, 3).filter(s => s.raw > 0);
+  const totalRaw = top3.reduce((sum, s) => sum + s.raw, 0) || 1;
+
+  const predictions = top3.map(s => ({
+    disease: s.name, probability: s.raw / totalRaw, specialist: s.info.specialist,
+    category: s.info.category, description: s.info.description, urgent: s.info.urgent,
+  }));
+
+  const redFlagsHit = selectedSymptoms.some(s => RED_FLAG_SYMPTOMS.has(s));
+  const anyUrgentDisease = predictions.some(p => p.urgent);
+  const urgentWarning = redFlagsHit || anyUrgentDisease;
+
+  return {
+    input_symptoms: selectedSymptoms, top_predictions: predictions, urgent_warning: urgentWarning,
+    urgent_message: urgentWarning ? "Beberapa gejala yang Anda pilih (atau kondisi yang terdeteksi) berpotensi serius. Sebaiknya segera periksakan diri ke IGD/dokter secepatnya, jangan menunggu." : null,
+    disclaimer: DISCLAIMER_TEXT,
+    duration_used: durationCat, bmi_used: bmiCat, tensi_used: tensiCat,
+  };
+}
+
+function renderResults(data) {
+  const view = document.getElementById('results-view');
+  let html = `<div class="method-note">Versi standalone ini memakai skoring rule-based di JavaScript (bobot gejala + bonus kecocokan durasi/BMI/tensi), bukan model machine learning terlatih seperti versi Python-nya. Cocok untuk preview cepat, bukan untuk klaim performa model.</div>`;
+
+  if (data.urgent_warning) html += `<div class="urgent-banner"><strong>⚠ Perhatian:</strong> ${data.urgent_message}</div>`;
+
+  html += `<h2>Tiga kemungkinan teratas</h2>`;
+  let subParts = [`${data.input_symptoms.length} gejala`];
+  if (data.bmi_used) subParts.push(`BMI kategori "${data.bmi_used}"`);
+  if (data.tensi_used) subParts.push(`tensi "${data.tensi_used}"`);
+  if (data.duration_used) subParts.push(`durasi "${data.duration_used.replaceAll('_',' ')}"`);
+  html += `<p class="results-sub">Berdasarkan ${subParts.join(', ')}.</p>`;
+  html += `<div class="results-list">`;
+
+  data.top_predictions.forEach((r, i) => {
+    const pct = Math.round(r.probability * 100);
+    html += `
+      <div class="result-card ${r.urgent ? 'urgent' : ''}">
+        <div class="result-top">
+          <span class="rank-badge">#${i + 1}</span>
+          <div class="result-title"><h3>${r.disease}</h3><span class="category-tag">${r.category}</span></div>
+          <span class="prob-value">${pct}%</span>
+        </div>
+        <div class="prob-track"><div class="prob-fill" style="width:${pct}%"></div></div>
+        <p class="result-desc">${r.description}</p>
+        <div class="specialist-row"><span class="specialist-label">Disarankan konsultasi ke:</span><span class="specialist-badge">${r.specialist}</span></div>
+      </div>`;
+  });
+
+  html += `</div>`;
+  html += `<div class="disclaimer"><span class="disclaimer-icon">ⓘ</span><p>${data.disclaimer}</p></div>`;
+  html += `<button class="reset-btn" id="reset-btn">Cek gejala lain</button>`;
+
+  view.innerHTML = html;
+  document.getElementById('reset-btn').addEventListener('click', resetApp);
+}
+
+function resetApp() {
+  selected.clear(); tensiChoice = null; durationChoice = null; bbTbSkipped = false;
+  document.getElementById('bb-input').value = ''; document.getElementById('tb-input').value = '';
+  document.getElementById('bb-input').disabled = false; document.getElementById('tb-input').disabled = false;
+  document.getElementById('bb-skip-btn').classList.remove('active');
+  document.getElementById('intake-view').classList.remove('hidden');
+  document.getElementById('results-view').classList.add('hidden');
+  document.getElementById('submit-bar').classList.remove('hidden');
+  buildSymptomUI();
+  buildChoiceButtons(document.getElementById('tensi-options'), TENSI_OPTIONS, () => tensiChoice, v => tensiChoice = v);
+  buildChoiceButtons(document.getElementById('duration-options'), DURATION_OPTIONS, () => durationChoice, v => durationChoice = v);
+  document.getElementById('selected-count-label').textContent = '0 gejala dipilih';
+  document.getElementById('submit-btn').disabled = true;
+}
+
+const LOADING_MESSAGES = ['Membaca gejala yang kamu pilih…', 'Membandingkan dengan pola gejala umum…', 'Menyusun tiga kemungkinan teratas…'];
+
+function handleSubmit() {
+  if (selected.size === 0) return;
+  document.getElementById('intake-view').classList.add('hidden');
+  document.getElementById('submit-bar').classList.add('hidden');
+  document.getElementById('loading-view').classList.remove('hidden');
+
+  let idx = 0;
+  const msgEl = document.getElementById('loading-msg');
+  const interval = setInterval(() => { idx = (idx + 1) % LOADING_MESSAGES.length; msgEl.textContent = LOADING_MESSAGES[idx]; }, 650);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    const bb = bbTbSkipped ? null : parseFloat(document.getElementById('bb-input').value) || null;
+    const tb = bbTbSkipped ? null : parseFloat(document.getElementById('tb-input').value) || null;
+    const bmiCat = bmiCategoryFrom(bb, tb);
+    const data = predict(Array.from(selected), resolveChoice(durationChoice), bmiCat, resolveChoice(tensiChoice));
+    document.getElementById('loading-view').classList.add('hidden');
+    document.getElementById('results-view').classList.remove('hidden');
+    renderResults(data);
+  }, 1700);
+}
+
+document.getElementById('submit-btn').addEventListener('click', handleSubmit);
+document.getElementById('bb-skip-btn').addEventListener('click', () => {
+  bbTbSkipped = !bbTbSkipped;
+  document.getElementById('bb-input').disabled = bbTbSkipped;
+  document.getElementById('tb-input').disabled = bbTbSkipped;
+  if (bbTbSkipped) { document.getElementById('bb-input').value = ''; document.getElementById('tb-input').value = ''; }
+  document.getElementById('bb-skip-btn').classList.toggle('active', bbTbSkipped);
+});
+
+buildSymptomUI();
+buildChoiceButtons(document.getElementById('tensi-options'), TENSI_OPTIONS, () => tensiChoice, v => tensiChoice = v);
+buildChoiceButtons(document.getElementById('duration-options'), DURATION_OPTIONS, () => durationChoice, v => durationChoice = v);
+</script>
+</body>
+</html>

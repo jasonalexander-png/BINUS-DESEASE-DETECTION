@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-const API_BASE = 'http://127.0.0.1:8010' // ganti ke URL API setelah deploy
+   const API_BASE = 'https://Jsnaldr.pythonanywhere.com' // ganti ke URL API setelah deploy
 
 const LOADING_MESSAGES = [
   'Membaca gejala yang kamu pilih…',

@@ -30,6 +30,25 @@ CATATAN SOAL FITUR TAMBAHAN (BMI, tensi, durasi sakit):
 BMI_CATEGORIES = ["kurus", "normal", "gemuk", "obesitas", "tidak_tahu"]
 TENSI_CATEGORIES = ["normal", "agak_tinggi", "tinggi", "tidak_tahu"]
 DURATION_CATEGORIES = ["kurang_3_hari", "3_7_hari", "1_4_minggu", "lebih_1_bulan", "tidak_tahu"]
+AGE_CATEGORIES = ["anak_remaja", "dewasa_muda", "dewasa", "lansia", "tidak_tahu"]
+
+AGE_BIAS_OLD = {"anak_remaja": 0.03, "dewasa_muda": 0.12, "dewasa": 0.35, "lansia": 0.50}
+AGE_BIAS_YOUNG = {"anak_remaja": 0.30, "dewasa_muda": 0.40, "dewasa": 0.22, "lansia": 0.08}
+AGE_BIAS_NEUTRAL = {"anak_remaja": 0.15, "dewasa_muda": 0.30, "dewasa": 0.35, "lansia": 0.20}
+
+
+def age_category_from_years(age_years):
+    """Konversi umur (tahun) jadi kategori. Return None kalau kosong ->
+    dipetakan ke 'tidak_tahu' di API."""
+    if age_years is None:
+        return None
+    if age_years < 18:
+        return "anak_remaja"
+    if age_years < 36:
+        return "dewasa_muda"
+    if age_years < 56:
+        return "dewasa"
+    return "lansia"
 
 DURATION_ARCHETYPES = {
     "akut":       {"kurang_3_hari": 0.45, "3_7_hari": 0.35, "1_4_minggu": 0.15, "lebih_1_bulan": 0.05},
@@ -71,6 +90,7 @@ SYMPTOM_GROUPS = {
         "telinga_berdenging": "Telinga berdenging",
         "pendengaran_menurun": "Pendengaran menurun",
         "kelenjar_getah_bening_bengkak": "Kelenjar getah bening bengkak (leher)",
+        "batuk_darah": "Batuk berdarah",
     },
     "Kepala & Saraf": {
         "sakit_kepala": "Sakit kepala",
@@ -79,6 +99,10 @@ SYMPTOM_GROUPS = {
         "pusing_berputar": "Pusing berputar (vertigo)",
         "sulit_konsentrasi": "Sulit berkonsentrasi",
         "sensitif_cahaya": "Sensitif terhadap cahaya",
+        "wajah_perot_sebelah": "Wajah perot/mencong sebelah (mendadak)",
+        "lemah_mendadak_satu_sisi": "Lemah mendadak pada satu sisi tubuh",
+        "bicara_pelo_mendadak": "Bicara pelo/cadel mendadak",
+        "kesemutan_tangan": "Kesemutan/mati rasa pada tangan",
     },
     "Pencernaan": {
         "mual": "Mual",
@@ -92,6 +116,10 @@ SYMPTOM_GROUPS = {
         "sering_bersendawa": "Sering bersendawa",
         "mata_kuning": "Mata/kulit menguning",
         "urin_gelap": "Urin berwarna gelap",
+        "nyeri_perut_kanan_atas": "Nyeri perut kanan atas",
+        "muntah_darah": "Muntah darah",
+        "bab_hitam_seperti_aspal": "BAB hitam seperti aspal",
+        "bab_berdarah": "BAB berdarah (darah segar)",
     },
     "Kulit & Mata": {
         "ruam_kulit": "Ruam kulit",
@@ -102,6 +130,11 @@ SYMPTOM_GROUPS = {
         "mata_merah": "Mata merah",
         "mata_gatal": "Mata gatal",
         "mata_berair": "Mata berair",
+        "kulit_bersisik_gatal": "Kulit bersisik dan gatal (area tertentu)",
+        "gatal_hebat_malam_hari": "Gatal hebat terutama malam hari",
+        "ruam_lepuh_seluruh_tubuh": "Ruam lepuh gatal di seluruh tubuh",
+        "kulit_merah_bengkak_hangat": "Kulit merah, bengkak, dan hangat saat disentuh",
+        "mata_kering_perih": "Mata kering dan perih",
     },
     "Otot, Sendi & Kemih": {
         "nyeri_sendi": "Nyeri sendi",
@@ -112,6 +145,9 @@ SYMPTOM_GROUPS = {
         "sering_buang_air_kecil": "Sering buang air kecil",
         "nyeri_saat_kencing": "Nyeri saat buang air kecil",
         "urin_keruh": "Urin keruh",
+        "nyeri_sendi_jempol_kaki": "Nyeri mendadak pada sendi jempol kaki",
+        "nyeri_menjalar_ke_kaki": "Nyeri punggung bawah menjalar ke kaki",
+        "bahu_kaku_sulit_digerakkan": "Bahu kaku, sulit digerakkan",
     },
     "Jantung & Hormon": {
         "jantung_berdebar": "Jantung berdebar",
@@ -126,6 +162,12 @@ SYMPTOM_GROUPS = {
         "mudah_tersinggung": "Mudah tersinggung/marah",
         "mood_turun_berkepanjangan": "Suasana hati menurun berkepanjangan",
     },
+    "Gigi & Mulut": {
+        "gusi_bengkak_berdarah": "Gusi bengkak dan mudah berdarah",
+        "nyeri_gigi_berdenyut": "Nyeri gigi berdenyut",
+        "luka_mulut_tangan_kaki": "Luka/sariawan di mulut, tangan, dan kaki",
+        "bengkak_rahang_dekat_telinga": "Bengkak di rahang dekat telinga",
+    },
 }
 
 ALL_SYMPTOMS = {k: v for group in SYMPTOM_GROUPS.values() for k, v in group.items()}
@@ -135,6 +177,11 @@ RED_FLAG_SYMPTOMS = {
     "sesak_napas",
     "nyeri_perut_kanan_bawah",
     "demam_tinggi_mendadak",
+    "wajah_perot_sebelah",
+    "lemah_mendadak_satu_sisi",
+    "bicara_pelo_mendadak",
+    "muntah_darah",
+    "bab_hitam_seperti_aspal",
 }
 
 DISEASES = {
@@ -211,7 +258,7 @@ DISEASES = {
                      "mata_berair": 0.5, "pilek": 0.5},
         "specialist": "THT / Alergi-Imunologi", "category": "Alergi", "urgent": False,
         "description": "Reaksi alergi pada saluran hidung terhadap pemicu seperti debu atau serbuk sari.",
-        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None,
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
     },
     "Asma": {
         "symptoms": {"sesak_napas": 0.85, "mengi": 0.8, "batuk_kering": 0.5, "nyeri_dada": 0.3},
@@ -230,14 +277,14 @@ DISEASES = {
         "symptoms": {"sakit_kepala": 0.5, "pusing_berputar": 0.3, "jantung_berdebar": 0.3, "lemas": 0.2},
         "specialist": "Kardiologis / Penyakit Dalam", "category": "Kardiovaskular", "urgent": False,
         "description": "Tekanan darah tinggi yang sering tidak menimbulkan gejala jelas di awal.",
-        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": "tinggi",
+        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": "tinggi", "age_bias": "tua",
     },
     "Diabetes Melitus Tipe 2": {
         "symptoms": {"sering_buang_air_kecil": 0.6, "lemas": 0.5, "penurunan_berat_badan": 0.4,
                      "kulit_kering": 0.3, "nafsu_makan_menurun": 0.2},
         "specialist": "Endokrinologis / Penyakit Dalam", "category": "Metabolik", "urgent": False,
         "description": "Gangguan metabolisme gula darah kronis.",
-        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": None,
+        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": None, "age_bias": "tua",
     },
     "Anemia Defisiensi Besi": {
         "symptoms": {"lemas": 0.85, "kelelahan": 0.7, "pusing_berputar": 0.4,
@@ -262,7 +309,7 @@ DISEASES = {
         "symptoms": {"gatal_gatal": 0.85, "kulit_kering": 0.7, "ruam_kulit": 0.6},
         "specialist": "Dermatologis (Dokter Kulit)", "category": "Kulit", "urgent": False,
         "description": "Peradangan kulit kronis yang menyebabkan rasa gatal dan kulit kering.",
-        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None,
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
     },
     "Konjungtivitis": {
         "symptoms": {"mata_merah": 0.9, "mata_gatal": 0.6, "mata_berair": 0.6},
@@ -274,27 +321,27 @@ DISEASES = {
         "symptoms": {"telinga_nyeri": 0.85, "demam": 0.4, "pendengaran_menurun": 0.4},
         "specialist": "THT", "category": "THT", "urgent": False,
         "description": "Infeksi pada telinga tengah, sering terjadi setelah pilek.",
-        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None,
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
     },
     "Tonsilitis": {
         "symptoms": {"sakit_tenggorokan": 0.85, "sulit_menelan": 0.6, "demam": 0.5,
                      "kelenjar_getah_bening_bengkak": 0.5},
         "specialist": "THT", "category": "THT", "urgent": False,
         "description": "Peradangan pada amandel (tonsil).",
-        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None,
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
     },
     "Apendisitis Akut (Radang Usus Buntu)": {
         "symptoms": {"nyeri_perut_kanan_bawah": 0.9, "mual": 0.5, "muntah": 0.4,
                      "demam": 0.4, "nafsu_makan_menurun": 0.4},
         "specialist": "Bedah Umum — SEGERA", "category": "Kedaruratan bedah", "urgent": True,
         "description": "Peradangan pada usus buntu yang dapat memburuk cepat dan butuh penanganan segera.",
-        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None,
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
     },
     "Batu Ginjal (Nefrolitiasis)": {
         "symptoms": {"nyeri_pinggang": 0.85, "nyeri_saat_kencing": 0.4, "urin_keruh": 0.3, "mual": 0.4},
         "specialist": "Urologis", "category": "Saluran kemih", "urgent": False,
         "description": "Endapan keras mineral yang terbentuk di ginjal atau saluran kemih.",
-        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None,
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "tua",
     },
     "Demam Berdarah Dengue (DBD)": {
         "symptoms": {"demam_tinggi_mendadak": 0.9, "sakit_kepala": 0.5, "nyeri_otot": 0.6,
@@ -336,7 +383,7 @@ DISEASES = {
                      "mudah_tersinggung": 0.3, "sembelit": 0.3},
         "specialist": "Endokrinologis", "category": "Hormon", "urgent": False,
         "description": "Kelenjar tiroid yang kurang aktif sehingga memperlambat metabolisme tubuh.",
-        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": None,
+        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": None, "age_bias": "tua",
     },
     "Hipertiroidisme": {
         "symptoms": {"penurunan_berat_badan": 0.6, "jantung_berdebar": 0.6, "tangan_gemetar": 0.6,
@@ -355,7 +402,7 @@ DISEASES = {
         "symptoms": {"nyeri_sendi": 0.85, "kaku_sendi_pagi": 0.6, "bengkak_sendi": 0.4, "nyeri_otot": 0.3},
         "specialist": "Ortopedis / Reumatologis", "category": "Muskuloskeletal", "urgent": False,
         "description": "Keausan tulang rawan sendi akibat penggunaan jangka panjang, umum pada usia lanjut.",
-        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": None,
+        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": None, "age_bias": "tua",
     },
     "Herpes Zoster (Cacar Api)": {
         "symptoms": {"lepuhan_kulit_sebelah_tubuh": 0.9, "nyeri_saraf_kulit": 0.8,
@@ -369,7 +416,7 @@ DISEASES = {
                      "sulit_konsentrasi": 0.4, "mudah_tersinggung": 0.3},
         "specialist": "Psikiater / Psikolog Klinis", "category": "Kondisi psikologis", "urgent": False,
         "description": "Kecemasan berlebihan yang menetap dan mengganggu aktivitas sehari-hari.",
-        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None,
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
     },
     "Malaria": {
         "symptoms": {"demam_tinggi_mendadak": 0.8, "menggigil": 0.8, "sakit_kepala": 0.5,
@@ -377,6 +424,137 @@ DISEASES = {
         "specialist": "Penyakit Dalam — SEGERA", "category": "Infeksi parasit", "urgent": True,
         "description": "Infeksi parasit yang ditularkan nyamuk Anopheles, umum di daerah endemis.",
         "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None,
+    },
+    "Tuberkulosis (TBC)": {
+        "symptoms": {"batuk_berdahak": 0.7, "batuk_darah": 0.5, "keringat_malam": 0.7,
+                     "penurunan_berat_badan": 0.6, "demam": 0.5, "kelelahan": 0.5, "nyeri_dada": 0.3},
+        "specialist": "Pulmonologis (Dokter Paru)", "category": "Infeksi bakteri", "urgent": False,
+        "description": "Infeksi bakteri kronis pada paru-paru, menular lewat udara, butuh pengobatan jangka panjang.",
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Pneumonia": {
+        "symptoms": {"demam": 0.7, "batuk_berdahak": 0.7, "sesak_napas": 0.6,
+                     "nyeri_dada": 0.5, "lemas": 0.5, "menggigil": 0.4},
+        "specialist": "Pulmonologis / Penyakit Dalam — SEGERA", "category": "Infeksi paru", "urgent": True,
+        "description": "Infeksi pada kantung udara paru-paru, dapat memburuk cepat terutama pada anak dan lansia.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Asam Urat (Gout)": {
+        "symptoms": {"nyeri_sendi_jempol_kaki": 0.85, "bengkak_sendi": 0.6, "nyeri_sendi": 0.5},
+        "specialist": "Reumatologis / Ortopedis", "category": "Muskuloskeletal", "urgent": False,
+        "description": "Penumpukan kristal asam urat di sendi, khas menyerang sendi jempol kaki secara mendadak.",
+        "duration_typical": "bervariasi", "bmi_bias": "tinggi", "tensi_bias": None, "age_bias": "tua",
+    },
+    "Batu Empedu (Kolelitiasis)": {
+        "symptoms": {"nyeri_perut_kanan_atas": 0.85, "mual": 0.5, "muntah": 0.4, "kembung": 0.3},
+        "specialist": "Bedah Digestif / Gastroenterologis", "category": "Pencernaan", "urgent": False,
+        "description": "Endapan keras yang terbentuk di kantung empedu.",
+        "duration_typical": "akut", "bmi_bias": "tinggi", "tensi_bias": None, "age_bias": "tua",
+    },
+    "Wasir (Hemoroid)": {
+        "symptoms": {"bab_berdarah": 0.7, "nyeri_perut": 0.2, "sembelit": 0.4},
+        "specialist": "Dokter Bedah (Bedah Digestif)", "category": "Pencernaan", "urgent": False,
+        "description": "Pembengkakan pembuluh darah di area anus/rektum bawah.",
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": "tua",
+    },
+    "Kolesterol Tinggi (Hiperkolesterolemia)": {
+        "symptoms": {"lemas": 0.3, "sakit_kepala": 0.2, "nyeri_dada": 0.2},
+        "specialist": "Penyakit Dalam", "category": "Metabolik", "urgent": False,
+        "description": "Kadar kolesterol darah tinggi, sering tanpa gejala jelas sampai terdeteksi lewat pemeriksaan.",
+        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": "tinggi", "age_bias": "tua",
+    },
+    "Panu / Kurap (Dermatofitosis)": {
+        "symptoms": {"kulit_bersisik_gatal": 0.85, "gatal_gatal": 0.5, "ruam_kulit": 0.4},
+        "specialist": "Dermatologis (Dokter Kulit)", "category": "Kulit", "urgent": False,
+        "description": "Infeksi jamur pada kulit, khas berbentuk bercak bersisik dan gatal.",
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Skabies (Kudis)": {
+        "symptoms": {"gatal_hebat_malam_hari": 0.85, "ruam_kulit": 0.5, "gatal_gatal": 0.6},
+        "specialist": "Dermatologis (Dokter Kulit)", "category": "Kulit", "urgent": False,
+        "description": "Infestasi tungau pada kulit, khas gatal memburuk di malam hari.",
+        "duration_typical": "subakut", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
+    },
+    "Cacar Air (Varisela)": {
+        "symptoms": {"ruam_lepuh_seluruh_tubuh": 0.85, "demam": 0.5, "gatal_gatal": 0.5, "lemas": 0.3},
+        "specialist": "Dokter Umum / Dermatologis", "category": "Infeksi virus", "urgent": False,
+        "description": "Infeksi virus yang menyebabkan ruam lepuh gatal di seluruh tubuh, umum pada anak.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
+    },
+    "Flu Singapura (HFMD)": {
+        "symptoms": {"luka_mulut_tangan_kaki": 0.85, "demam": 0.5, "nafsu_makan_menurun": 0.4, "sakit_tenggorokan": 0.3},
+        "specialist": "Dokter Umum / Anak", "category": "Infeksi virus", "urgent": False,
+        "description": "Infeksi virus umum pada anak, khas menimbulkan luka di mulut, tangan, dan kaki.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
+    },
+    "Gondongan (Parotitis)": {
+        "symptoms": {"bengkak_rahang_dekat_telinga": 0.85, "demam": 0.5, "nafsu_makan_menurun": 0.3, "lemas": 0.3},
+        "specialist": "Dokter Umum", "category": "Infeksi virus", "urgent": False,
+        "description": "Infeksi virus pada kelenjar ludah, khas menyebabkan bengkak di rahang dekat telinga.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "muda",
+    },
+    "Radang Gusi (Gingivitis)": {
+        "symptoms": {"gusi_bengkak_berdarah": 0.85, "nyeri_gigi_berdenyut": 0.2},
+        "specialist": "Dokter Gigi", "category": "Gigi & Mulut", "urgent": False,
+        "description": "Peradangan pada gusi, sering akibat kebersihan mulut yang kurang terjaga.",
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Abses Gigi": {
+        "symptoms": {"nyeri_gigi_berdenyut": 0.85, "bengkak_rahang_dekat_telinga": 0.3,
+                     "demam": 0.3, "gusi_bengkak_berdarah": 0.3},
+        "specialist": "Dokter Gigi", "category": "Gigi & Mulut", "urgent": False,
+        "description": "Kumpulan nanah akibat infeksi bakteri di sekitar akar gigi.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Nyeri Punggung Bawah (Saraf Kejepit/HNP)": {
+        "symptoms": {"nyeri_pinggang": 0.6, "nyeri_menjalar_ke_kaki": 0.8, "nyeri_otot": 0.3},
+        "specialist": "Ortopedis / Neurologis", "category": "Muskuloskeletal", "urgent": False,
+        "description": "Tekanan pada saraf tulang belakang, khas nyeri punggung bawah yang menjalar ke kaki.",
+        "duration_typical": "kronis", "bmi_bias": "tinggi", "tensi_bias": None, "age_bias": "tua",
+    },
+    "Carpal Tunnel Syndrome": {
+        "symptoms": {"kesemutan_tangan": 0.85, "nyeri_otot": 0.2},
+        "specialist": "Neurologis / Ortopedis", "category": "Muskuloskeletal", "urgent": False,
+        "description": "Tekanan pada saraf di pergelangan tangan, umum pada pekerja yang banyak mengetik.",
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Frozen Shoulder (Kapsulitis Adhesif)": {
+        "symptoms": {"bahu_kaku_sulit_digerakkan": 0.85, "nyeri_otot": 0.4, "nyeri_sendi": 0.3},
+        "specialist": "Ortopedis", "category": "Muskuloskeletal", "urgent": False,
+        "description": "Kekakuan pada sendi bahu yang membatasi gerakan, berkembang bertahap.",
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": "tua",
+    },
+    "Selulitis (Infeksi Kulit)": {
+        "symptoms": {"kulit_merah_bengkak_hangat": 0.85, "demam": 0.4, "lemas": 0.3},
+        "specialist": "Dermatologis — SEGERA jika disertai demam tinggi", "category": "Infeksi kulit", "urgent": True,
+        "description": "Infeksi bakteri pada lapisan kulit yang lebih dalam, dapat menyebar cepat.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Sindrom Mata Kering (Dry Eye)": {
+        "symptoms": {"mata_kering_perih": 0.85, "mata_merah": 0.3, "sensitif_cahaya": 0.2},
+        "specialist": "Oftalmologis (Dokter Mata)", "category": "Mata", "urgent": False,
+        "description": "Produksi air mata yang tidak cukup atau berkualitas rendah, menyebabkan mata kering dan perih.",
+        "duration_typical": "kronis", "bmi_bias": None, "tensi_bias": None, "age_bias": "tua",
+    },
+    "Leptospirosis": {
+        "symptoms": {"demam_tinggi_mendadak": 0.7, "sakit_kepala": 0.5, "nyeri_otot": 0.6,
+                     "mata_kuning": 0.3, "lemas": 0.5},
+        "specialist": "Penyakit Dalam — SEGERA", "category": "Infeksi bakteri", "urgent": True,
+        "description": "Infeksi bakteri dari air/tanah tercemar urine hewan, sering setelah banjir.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": None,
+    },
+    "Stroke (Gejala Mendadak)": {
+        "symptoms": {"wajah_perot_sebelah": 0.8, "lemah_mendadak_satu_sisi": 0.85,
+                     "bicara_pelo_mendadak": 0.7, "sakit_kepala": 0.3, "pusing_berputar": 0.2},
+        "specialist": "IGD / Neurologis — SEGERA, JANGAN DITUNDA", "category": "Kedaruratan saraf", "urgent": True,
+        "description": "Gangguan aliran darah ke otak yang mendadak — setiap menit sangat berarti untuk penanganan.",
+        "duration_typical": "akut", "bmi_bias": "tinggi", "tensi_bias": "tinggi", "age_bias": "tua",
+    },
+    "Perdarahan Saluran Cerna": {
+        "symptoms": {"muntah_darah": 0.7, "bab_hitam_seperti_aspal": 0.7, "nyeri_ulu_hati": 0.4, "lemas": 0.4},
+        "specialist": "Gastroenterologis — SEGERA", "category": "Kedaruratan pencernaan", "urgent": True,
+        "description": "Perdarahan di saluran pencernaan, dapat berasal dari tukak lambung atau kondisi lain yang butuh evaluasi segera.",
+        "duration_typical": "akut", "bmi_bias": None, "tensi_bias": None, "age_bias": "tua",
     },
 }
 

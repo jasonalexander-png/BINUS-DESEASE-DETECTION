@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-   const API_BASE = 'https://Jsnaldr.pythonanywhere.com' // ganti ke URL API setelah deploy
+const API_BASE = 'http://127.0.0.1:8010' // ganti ke URL API setelah deploy
 
 const LOADING_MESSAGES = [
   'Membaca gejala yang kamu pilih…',
@@ -64,6 +64,33 @@ function OptionalChoiceRow({ title, options, value, onChange }) {
           onClick={() => onChange('skip-refuse')}
         >
           Tidak mau jawab
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function AgeInput({ age, onAgeChange, skipped, onSkipToggle }) {
+  return (
+    <div className="optional-block">
+      <h3>Umur (opsional)</h3>
+      <div className="bmi-row">
+        <label className="bmi-field">
+          <span>Umur (tahun)</span>
+          <input
+            type="number"
+            min="0"
+            max="120"
+            placeholder="mis. 28"
+            value={age}
+            disabled={skipped}
+            onChange={(e) => onAgeChange(e.target.value)}
+          />
+        </label>
+      </div>
+      <div className="chip-grid" style={{ marginTop: 10 }}>
+        <button type="button" className={`chip chip-skip ${skipped ? 'active' : ''}`} onClick={onSkipToggle}>
+          {skipped ? '✓ Tidak diisi' : 'Tidak tahu / tidak mau menjawab'}
         </button>
       </div>
     </div>
@@ -158,6 +185,16 @@ function ResultCard({ result, rank }) {
         <div className="prob-fill" style={{ width: `${pct}%` }} />
       </div>
       <p className="result-desc">{result.description}</p>
+      {result.contributing_symptoms?.length > 0 && (
+        <div className="contributing-row">
+          <span className="specialist-label">Gejala paling khas dari yang kamu pilih:</span>
+          <div className="contributing-chips">
+            {result.contributing_symptoms.map((c) => (
+              <span key={c.symptom} className="contributing-chip">{c.label}</span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="specialist-row">
         <span className="specialist-label">Disarankan konsultasi ke:</span>
         <span className="specialist-badge">{result.specialist}</span>
@@ -209,6 +246,8 @@ export default function App() {
   const [bb, setBb] = useState('')
   const [tb, setTb] = useState('')
   const [bbTbSkipped, setBbTbSkipped] = useState(false)
+  const [age, setAge] = useState('')
+  const [ageSkipped, setAgeSkipped] = useState(false)
   const [tensiChoice, setTensiChoice] = useState(null)
   const [durationChoice, setDurationChoice] = useState(null)
   const [stage, setStage] = useState('intake')
@@ -253,6 +292,7 @@ export default function App() {
       tinggi_badan_cm: bbTbSkipped || !tb ? null : Number(tb),
       tensi_category: resolveChoice(tensiChoice),
       duration_category: resolveChoice(durationChoice),
+      umur_tahun: ageSkipped || !age ? null : Number(age),
     }
 
     try {
@@ -280,6 +320,7 @@ export default function App() {
   function handleReset() {
     setSelected(new Set())
     setBb(''); setTb(''); setBbTbSkipped(false)
+    setAge(''); setAgeSkipped(false)
     setTensiChoice(null); setDurationChoice(null)
     setResults(null)
     setStage('intake')
@@ -317,6 +358,11 @@ export default function App() {
               onBbChange={setBb} onTbChange={setTb}
               skipped={bbTbSkipped}
               onSkipToggle={() => { setBbTbSkipped((s) => !s); setBb(''); setTb('') }}
+            />
+            <AgeInput
+              age={age} onAgeChange={setAge}
+              skipped={ageSkipped}
+              onSkipToggle={() => { setAgeSkipped((s) => !s); setAge('') }}
             />
             <OptionalChoiceRow title="Tekanan darah (tensi), kalau tahu" options={TENSI_OPTIONS} value={tensiChoice} onChange={setTensiChoice} />
             <OptionalChoiceRow title="Sudah berapa lama merasakan gejala ini?" options={DURATION_OPTIONS} value={durationChoice} onChange={setDurationChoice} />

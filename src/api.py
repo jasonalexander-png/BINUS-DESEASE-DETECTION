@@ -32,8 +32,24 @@ from flask_cors import CORS
 
 from knowledge_base import (
     ALL_SYMPTOMS, SYMPTOM_GROUPS, DISEASES, RED_FLAG_SYMPTOMS,
-    BMI_CATEGORIES, TENSI_CATEGORIES, DURATION_CATEGORIES, bmi_from_bb_tb,
+    BMI_CATEGORIES, TENSI_CATEGORIES, DURATION_CATEGORIES, AGE_CATEGORIES,
+    bmi_from_bb_tb, age_category_from_years,
 )
+
+
+def get_contributing_symptoms(disease_name, selected_symptoms, top_n=3):
+    """Dari gejala yang dipilih user, cari yang paling 'khas' untuk penyakit
+    ini (bobot tertinggi di knowledge_base.py). Dipakai untuk explainability
+    sederhana di level prediksi individual — BUKAN SHAP/feature importance
+    dari model terlatih, tapi transparansi dari basis pengetahuan yang
+    dipakai model untuk belajar. Lihat catatan di README bagian Explainability."""
+    profile = DISEASES[disease_name]["symptoms"]
+    matched = [(s, profile[s]) for s in selected_symptoms if s in profile]
+    matched.sort(key=lambda x: x[1], reverse=True)
+    return [
+        {"symptom": s, "label": ALL_SYMPTOMS[s], "weight": w}
+        for s, w in matched[:top_n]
+    ]
 
 ROOT = Path(__file__).resolve().parent.parent
 MODEL_PATH = ROOT / "outputs" / "models" / "disease_model.joblib"
@@ -75,6 +91,7 @@ def get_options():
     return jsonify({
         "tensi_category": TENSI_CATEGORIES,
         "duration_category": DURATION_CATEGORIES,
+        "age_category": AGE_CATEGORIES,
     })
 
 
@@ -94,6 +111,7 @@ def predict():
     tb = body.get("tinggi_badan_cm")
     tensi_raw = body.get("tensi_category")
     duration_raw = body.get("duration_category")
+    umur_tahun = body.get("umur_tahun")
 
     try:
         bundle = get_bundle()
@@ -107,11 +125,13 @@ def predict():
     bmi_cat = bmi_from_bb_tb(bb, tb) or "tidak_tahu"
     tensi_cat = tensi_raw if tensi_raw in TENSI_CATEGORIES else "tidak_tahu"
     duration_cat = duration_raw if duration_raw in DURATION_CATEGORIES else "tidak_tahu"
+    age_cat = age_category_from_years(umur_tahun) or "tidak_tahu"
 
     row = {s: (1 if s in symptoms else 0) for s in symptom_keys}
     row[f"duration_category_{duration_cat}"] = 1
     row[f"bmi_category_{bmi_cat}"] = 1
     row[f"tensi_category_{tensi_cat}"] = 1
+    row[f"age_category_{age_cat}"] = 1
 
     X = pd.DataFrame([row])
     X = X.reindex(columns=feature_columns, fill_value=0)
@@ -135,6 +155,7 @@ def predict():
             "category": info["category"],
             "description": info["description"],
             "urgent": is_urgent,
+            "contributing_symptoms": get_contributing_symptoms(disease_name, symptoms),
         })
 
     red_flags_hit = [s for s in symptoms if s in RED_FLAG_SYMPTOMS]
@@ -151,6 +172,7 @@ def predict():
         "bmi_category_used": bmi_cat,
         "tensi_category_used": tensi_cat,
         "duration_category_used": duration_cat,
+        "age_category_used": age_cat,
         "top_predictions": predictions,
         "urgent_warning": urgent_warning,
         "urgent_message": urgent_message,

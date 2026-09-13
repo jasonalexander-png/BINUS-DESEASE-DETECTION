@@ -19,6 +19,7 @@ from knowledge_base import (
     DISEASES, ALL_SYMPTOMS, DISEASE_LIST,
     DURATION_ARCHETYPES, BMI_BIAS_HIGH, BMI_BIAS_NEUTRAL,
     TENSI_BIAS_HIGH, TENSI_BIAS_NEUTRAL,
+    AGE_BIAS_OLD, AGE_BIAS_YOUNG, AGE_BIAS_NEUTRAL,
 )
 
 SEED = 42
@@ -78,6 +79,19 @@ def simulate_patient(disease_name):
         dist = TENSI_BIAS_HIGH if info["tensi_bias"] == "tinggi" else TENSI_BIAS_NEUTRAL
         row["tensi_category"] = weighted_choice(dist)
 
+    # --- kategori umur ---
+    if random.random() < UNKNOWN_PROBABILITY:
+        row["age_category"] = "tidak_tahu"
+    else:
+        age_bias = info.get("age_bias")
+        if age_bias == "tua":
+            dist = AGE_BIAS_OLD
+        elif age_bias == "muda":
+            dist = AGE_BIAS_YOUNG
+        else:
+            dist = AGE_BIAS_NEUTRAL
+        row["age_category"] = weighted_choice(dist)
+
     row["disease"] = disease_name
     return row
 
@@ -91,7 +105,7 @@ def main():
     random.shuffle(rows)
 
     out_path = DATA_DIR / "symptom_training_data.csv"
-    fieldnames = symptom_keys + ["duration_category", "bmi_category", "tensi_category", "disease"]
+    fieldnames = symptom_keys + ["duration_category", "bmi_category", "tensi_category", "age_category", "disease"]
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()

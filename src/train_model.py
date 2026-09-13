@@ -28,7 +28,7 @@ MODEL_DIR = ROOT / "outputs" / "models"
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 SYMPTOM_KEYS = list(ALL_SYMPTOMS.keys())
-CATEGORICAL_COLS = ["duration_category", "bmi_category", "tensi_category"]
+CATEGORICAL_COLS = ["duration_category", "bmi_category", "tensi_category", "age_category"]
 
 
 def main():
